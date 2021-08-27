@@ -1,15 +1,22 @@
 import express from 'express'
 import dotenv from 'dotenv'
+import connectDB from './config/db.js'
 import colors from 'colors'
 import morgan from 'morgan'
 
 dotenv.config()
 
+connectDB()
+
 import transactions from './routes/transactions.js'
 
 const app = express()
 
-// app.get('/', (req, res) => res.send('Hello'))
+app.use(express.json())
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'))
+}
 
 app.use('/api/v1/transactions', transactions)
 
