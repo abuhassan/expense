@@ -22,14 +22,6 @@ const voucherSchema = mongoose.Schema(
         true,
         'Please select which account should this voucher be recorded under',
       ],
-      enum: [
-        'cosway',
-        'other',
-        'stock purchase',
-        'freight',
-        'rentals',
-        'advertisement',
-      ],
     },
     status: {
       type: String,

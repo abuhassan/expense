@@ -4,7 +4,7 @@ const User = require('../models/userModel')
 const Voucher = require('../models/voucherModel')
 
 // @desc Get user vouchers
-// @route /api/vouchers
+// @route GET /api/vouchers
 // @access Private
 const getVouchers = asyncHandler(async (req, res) => {
   // Get user using the id in JWT
@@ -48,7 +48,7 @@ const getVoucher = asyncHandler(async (req, res) => {
 })
 
 // @desc Create user voucher
-// @route /api/vouchers
+// @route POST /api/vouchers
 // @access Private
 const createVoucher = asyncHandler(async (req, res) => {
   const { voucherType, description, account } = req.body
