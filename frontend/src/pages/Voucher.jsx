@@ -3,16 +3,8 @@ import { toast } from 'react-toastify'
 import Modal from 'react-modal'
 import { FaPlus } from 'react-icons/fa'
 import { useSelector, useDispatch } from 'react-redux'
-import {
-  getVoucher,
-  reset,
-  closeVoucher,
-} from '../features/vouchers/voucherSlice'
-import {
-  getNotes,
-  createNote,
-  reset as notesReset,
-} from '../features/notes/noteSlice'
+import { getVoucher, closeVoucher } from '../features/vouchers/voucherSlice'
+import { getNotes, createNote } from '../features/notes/noteSlice'
 import { useParams, useNavigate } from 'react-router-dom'
 import BackButton from '../components/BackButton'
 import Spinner from '../components/Spinner'
@@ -37,53 +29,50 @@ function Voucher() {
   const [modalIsOpen, setModalIsOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
 
-  const { voucher, isLoading, isSuccess, isError, message } = useSelector(
-    (state) => state.vouchers
-  )
+  const { voucher } = useSelector((state) => state.vouchers)
 
-  const { notes, isLoading: notesIsLoading } = useSelector(
-    (state) => state.notes
-  )
+  const { notes } = useSelector((state) => state.notes)
 
-  const params = useParams()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const { voucherId } = useParams()
 
   useEffect(() => {
-    if (isError) {
-      toast.error(message)
-    }
+    dispatch(getVoucher(voucherId)).unwrap().catch(toast.error)
 
-    dispatch(getVoucher(voucherId))
-    dispatch(getNotes(voucherId))
+    dispatch(getNotes(voucherId)).unwrap().catch(toast.error)
     // eslint-disable-next-line
-  }, [isError, message, voucherId])
+  }, [voucherId, dispatch])
 
   // Close voucher
   const onVoucherClose = () => {
     dispatch(closeVoucher(voucherId))
-    toast.success('Voucher Closed')
-    navigate('/vouchers')
+      .unwrap()
+      .then(() => {
+        toast.success('Voucher Closed')
+        navigate('/vouchers')
+      })
+      .catch(toast.error)
   }
 
   // Create note submit
   const onNoteSubmit = (e) => {
     e.preventDefault()
     dispatch(createNote({ noteText, voucherId }))
-    closeModal()
+      .unwrap()
+      .then(() => {
+        setNoteText('')
+        closeModal()
+      })
+      .catch(toast.error)
   }
 
   // Open/Close Modal
   const openModal = () => setModalIsOpen(true)
   const closeModal = () => setModalIsOpen(false)
 
-  if (isLoading || notesIsLoading) {
+  if (!voucher) {
     return <Spinner />
-  }
-
-  if (isError) {
-    return <h3>Something went wrong</h3>
   }
 
   return (
@@ -91,7 +80,7 @@ function Voucher() {
       <header className='voucher-header'>
         <BackButton url='/vouchers' />
         <h2>
-          Voucher ID: {voucherId}
+          Voucher ID: {voucher._Id}
           <span className={`status status-${voucher.status}`}>
             {voucher.status}
           </span>
@@ -142,9 +131,11 @@ function Voucher() {
         </form>
       </Modal>
 
-      {notes.map((note) => (
-        <NoteItem key={note._id} note={note} />
-      ))}
+      {notes ? (
+        notes.map((note) => <NoteItem key={note._id} note={note} />)
+      ) : (
+        <Spinner />
+      )}
 
       {voucher.status !== 'closed' && (
         <button onClick={onVoucherClose} className='btn btn-block btn-danger'>

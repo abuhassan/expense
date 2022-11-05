@@ -1,13 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import voucherService from './voucherService'
+import { extractErrorMessage } from '../../utils'
 
 const initialState = {
-  vouchers: [],
-  voucher: {},
-  isError: false,
-  isSuccess: false,
-  isLoading: false,
-  message: '',
+  vouchers: null,
+  voucher: null,
 }
 
 // Create new voucher
@@ -18,34 +15,7 @@ export const createVoucher = createAsyncThunk(
       const token = thunkAPI.getState().auth.user.token
       return await voucherService.createVoucher(voucherData, token)
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
-    }
-  }
-)
-
-// Get user voucher
-export const getVoucher = createAsyncThunk(
-  'vouchers/get',
-  async (voucherId, thunkAPI) => {
-    try {
-      const token = thunkAPI.getState().auth.user.token
-      return await voucherService.getVoucher(voucherId, token)
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
+      return thunkAPI.rejectWithValue(extractErrorMessage(error))
     }
   }
 )
@@ -58,14 +28,20 @@ export const getVouchers = createAsyncThunk(
       const token = thunkAPI.getState().auth.user.token
       return await voucherService.getVouchers(token)
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
+      return thunkAPI.rejectWithValue(extractErrorMessage(error))
+    }
+  }
+)
 
-      return thunkAPI.rejectWithValue(message)
+// Get user voucher
+export const getVoucher = createAsyncThunk(
+  'vouchers/get',
+  async (voucherId, thunkAPI) => {
+    try {
+      const token = thunkAPI.getState().auth.user.token
+      return await voucherService.getVoucher(voucherId, token)
+    } catch (error) {
+      return thunkAPI.rejectWithValue(extractErrorMessage(error))
     }
   }
 )
@@ -78,73 +54,33 @@ export const closeVoucher = createAsyncThunk(
       const token = thunkAPI.getState().auth.user.token
       return await voucherService.closeVoucher(voucherId, token)
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
+      return thunkAPI.rejectWithValue(extractErrorMessage(error))
     }
   }
 )
+
 export const voucherSlice = createSlice({
   name: 'voucher',
   initialState,
-  reducers: {
-    reset: (state) => initialState,
-  },
   extraReducers: (builder) => {
     builder
-      .addCase(createVoucher.pending, (state) => {
-        state.isLoading = true
-      })
-      .addCase(createVoucher.fulfilled, (state) => {
-        state.isLoading = false
-        state.isSuccess = true
-      })
-      .addCase(createVoucher.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
-      })
+
       .addCase(getVouchers.pending, (state) => {
-        state.isLoading = true
+        state.voucher = null
       })
       .addCase(getVouchers.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isSuccess = true
         state.vouchers = action.payload
       })
-      .addCase(getVouchers.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
-      })
-      .addCase(getVoucher.pending, (state) => {
-        state.isLoading = true
-      })
       .addCase(getVoucher.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isSuccess = true
         state.voucher = action.payload
       })
-      .addCase(getVoucher.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
-        state.message = action.payload
-      })
       .addCase(closeVoucher.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.vouchers.map((voucher) =>
-          voucher.id === action.payload.id
-            ? (voucher.status = 'closed')
-            : voucher
+        state.voucher = action.payload
+        state.vouchers = state.vouchers.map((voucher) =>
+          voucher._id === action.payload._id ? action.payload : voucher
         )
       })
   },
 })
 
-export const { reset } = voucherSlice.actions
 export default voucherSlice.reducer

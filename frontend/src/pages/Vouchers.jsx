@@ -1,30 +1,20 @@
 import { useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getVouchers, reset } from '../features/vouchers/voucherSlice'
+import { getVouchers } from '../features/vouchers/voucherSlice'
 import Spinner from '../components/Spinner'
 import BackButton from '../components/BackButton'
 import VoucherItem from '../components/VoucherItem'
 
 function Vouchers() {
-  const { vouchers, isLoading, isSuccess } = useSelector(
-    (state) => state.vouchers
-  )
+  const { vouchers } = useSelector((state) => state.vouchers)
 
   const dispatch = useDispatch()
-
-  useEffect(() => {
-    return () => {
-      if (isSuccess) {
-        dispatch(reset())
-      }
-    }
-  }, [dispatch, isSuccess])
 
   useEffect(() => {
     dispatch(getVouchers())
   }, [dispatch])
 
-  if (isLoading) {
+  if (!vouchers) {
     return <Spinner />
   }
 

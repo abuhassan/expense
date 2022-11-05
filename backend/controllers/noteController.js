@@ -1,21 +1,15 @@
 const asyncHandler = require('express-async-handler')
 
-const User = require('../models/userModel')
 const Note = require('../models/noteModel')
 const Voucher = require('../models/voucherModel')
+
+// NOTE: no need to get the user, we already have them on req object from
+// protect middleware. The protect middleware already checks for valid user.
 
 // @desc Get notes for a voucher
 // @route GET /api/vouchers/:voucherId/notes
 // @access Private
 const getNotes = asyncHandler(async (req, res) => {
-  // Get user using the id in JWT
-  const user = await User.findById(req.user.id)
-
-  if (!user) {
-    res.status(401)
-    throw new Error('User not found')
-  }
-
   const voucher = await Voucher.findById(req.params.voucherId)
 
   if (voucher.user.toString() !== req.user.id) {
@@ -32,14 +26,6 @@ const getNotes = asyncHandler(async (req, res) => {
 // @route POST /api/vouchers/:voucherId/notes
 // @access Private
 const addNote = asyncHandler(async (req, res) => {
-  // Get user using the id in JWT
-  const user = await User.findById(req.user.id)
-
-  if (!user) {
-    res.status(401)
-    throw new Error('User not found')
-  }
-
   const voucher = await Voucher.findById(req.params.voucherId)
 
   if (voucher.user.toString() !== req.user.id) {
@@ -47,14 +33,14 @@ const addNote = asyncHandler(async (req, res) => {
     throw new Error('User not authorized')
   }
 
-  const notes = await Note.create({
+  const note = await Note.create({
     text: req.body.text,
     isStaff: false,
     voucher: req.params.voucherId,
     user: req.user.id,
   })
 
-  res.status(200).json(notes)
+  res.status(200).json(note)
 })
 
 module.exports = {

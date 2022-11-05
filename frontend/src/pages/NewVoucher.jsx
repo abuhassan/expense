@@ -1,46 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { createVoucher, reset } from '../features/vouchers/voucherSlice'
-import Spinner from '../components/Spinner'
+import { createVoucher } from '../features/vouchers/voucherSlice'
+
 import BackButton from '../components/BackButton'
 
 function NewVoucher() {
   const { user } = useSelector((state) => state.auth)
-  const { isLoading, isError, isSuccess, message } = useSelector(
-    (state) => state.vouchers
-  )
 
   const [name] = useState(user.name)
   const [email] = useState(user.email)
-  const [voucherType, setVoucherType] = useState('')
+  const [voucherType, setVoucherType] = useState('income')
   const [description, setDescription] = useState('')
   const [account, setAccount] = useState('')
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (isError) {
-      toast.error(message)
-    }
-
-    if (isSuccess) {
-      dispatch(reset())
-      navigate('/vouchers')
-    }
-
-    dispatch(reset())
-  }, [dispatch, isError, isSuccess, navigate, message])
-
   const onSubmit = (e) => {
     e.preventDefault()
     dispatch(createVoucher({ voucherType, description, account }))
-  }
-
-  if (isLoading) {
-    return <Spinner />
+      .unwrap()
+      .then(() => {
+        // We got a good response so navigate the user
+        navigate('/vouchers')
+        toast.success('New voucher created')
+      })
+      .catch(toast.error)
   }
 
   return (
